@@ -6,6 +6,7 @@ import android.hardware.Sensor.TYPE_GRAVITY
 import android.hardware.Sensor.TYPE_ROTATION_VECTOR
 import android.hardware.SensorManager
 import android.os.Bundle
+import android.util.Log
 import android.util.Size
 import android.widget.ImageView
 import android.widget.RelativeLayout
@@ -17,7 +18,7 @@ import com.example.motionsensor.databinding.ActivityMainBinding
 
 private const val TAG = "MainActivity"
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),IsInRangeCallback{
     lateinit var binding: ActivityMainBinding
     lateinit var preview: Preview
     var selector: CameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
@@ -48,7 +49,8 @@ class MainActivity : AppCompatActivity() {
         motionSensor = MotionSensor(
             sensorManager,
             viewRoot,
-            circleMove
+            circleMove,
+            this
         )
         preview = Preview.Builder()
             .setTargetResolution(Size(720, 1280))
@@ -68,5 +70,9 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         motionSensor.unregisterListener()
+    }
+
+    override fun isInRange(isIn: Boolean) {
+        Log.d(TAG, "isInRange: $isIn")
     }
 }
