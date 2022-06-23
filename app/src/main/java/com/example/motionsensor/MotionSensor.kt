@@ -17,7 +17,7 @@ class MotionSensor(
     private val viewRoot: View,
     private val circleMove: View,
     private val context: Context,
-    private val isInRangeCallback: IsInRangeCallback,
+    private val callback: CircleInRangeListener,
 ) : SensorEventListener {
     private var mx by Delegates.notNull<Double>()
     private var my by Delegates.notNull<Double>()
@@ -28,8 +28,11 @@ class MotionSensor(
     private val FROM_RADES_TO_DEGS = -57.5
     var vector1: Double = 0.0
     var vector2: Double = 0.0
-
+    var isInZ:Boolean = false
+    var isInX:Boolean = false
     init {
+        isInX = false
+        isInZ = false
         mx = 0.0
         my = 0.0
         sensorManager = context.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
@@ -38,8 +41,7 @@ class MotionSensor(
         sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
 
-    var isInZ = false
-    var isInX = false
+
     var over = false
     override fun onSensorChanged(event: SensorEvent?) {
         val params = circleMove.layoutParams as RelativeLayout.LayoutParams
@@ -56,8 +58,8 @@ class MotionSensor(
                         params.topMargin = (((10 - it.values[1] + 9.81) * my).toInt())
                         Log.d(TAG, "top: ${params.topMargin}")
                     } else {
-//                        params.leftMargin = (mx * 15).toInt()
-                        params.leftMargin = (((15 - it.values[0]) * mx).toInt())
+                        params.leftMargin = (mx * 15).toInt()
+//                        params.leftMargin = (((15 - it.values[0]) * mx).toInt())
                         params.topMargin = (((10 + it.values[1] - 9.81) * my).toInt())
                         Log.d(TAG, "top: ${params.topMargin}")
                     }
@@ -103,12 +105,12 @@ class MotionSensor(
         if (1.5 > vector1 && vector1 > -1.5) {
             if (!isInZ) {
                 isInZ = true
-                isInRangeCallback.isInRange(isInZ,isInX)
+                callback.inRangeCallback(isInZ,isInX)
             }
         } else {
             if (isInZ) {
                 isInZ = false
-                isInRangeCallback.isInRange(isInZ,isInX)
+                callback.inRangeCallback(isInZ,isInX)
             }
         }
     }
@@ -126,6 +128,6 @@ class MotionSensor(
     }
 }
 
-interface IsInRangeCallback {
-    fun isInRange(isInZ: Boolean, isInX: Boolean)
+interface CircleInRangeListener {
+    fun inRangeCallback(isInZ: Boolean, isInX: Boolean)
 }

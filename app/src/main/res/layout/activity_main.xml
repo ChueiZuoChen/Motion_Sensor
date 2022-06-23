@@ -10,29 +10,46 @@
         android:id="@+id/preview"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
     <ImageView
         android:id="@+id/circle_fix"
+        android:visibility="invisible"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
         android:src="@drawable/circle_orange"
         tools:ignore="ContentDescription" />
 
     <ImageView
+        android:visibility="invisible"
         android:id="@+id/circle_move"
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:src="@drawable/circle_purple"
         tools:ignore="ContentDescription" />
-    <TextView
-        android:id="@+id/text"
-        android:visibility="gone"
-        android:text="OK!"
-        android:textColor="#25F90D"
-        android:textAppearance="@style/TextAppearance.AppCompat.Large"
-        android:layout_width="wrap_content"
+
+    <ProgressBar
+        android:id="@+id/circle_countdown_progressbar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="150dp"
+        android:layout_height="150dp"
+        android:rotation="-90"
+        android:max="100"
+        android:progress="0"
+        android:indeterminate="false"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:layout_height="wrap_content"/>
+        android:progressDrawable="@drawable/circle_blue" />
+
+    <TextView
+        android:id="@+id/text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:text="OK!"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:textColor="#25F90D"
+        android:visibility="gone" />
 </RelativeLayout>
