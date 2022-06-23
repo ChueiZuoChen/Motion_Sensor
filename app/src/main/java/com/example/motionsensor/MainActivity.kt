@@ -1,10 +1,6 @@
 package com.example.motionsensor
 
 import android.content.pm.ActivityInfo
-import android.hardware.Sensor
-import android.hardware.Sensor.TYPE_GRAVITY
-import android.hardware.Sensor.TYPE_ROTATION_VECTOR
-import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
@@ -26,20 +22,15 @@ enum class State {
 
 private const val TAG = "MainActivity"
 
-class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListener {
+class MainActivity : AppCompatActivity(), OrientationListener, CountDownListener {
     lateinit var binding: ActivityMainBinding
     lateinit var preview: Preview
     var selector: CameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
     var cameraProvider: ProcessCameraProvider? = null
     lateinit var viewModel: AlignmentViewModel
     lateinit var countDown: CountDown
-
     /*Sensor*/
-    lateinit var sensorGravity: Sensor
-    lateinit var sensorRotation: Sensor
-    lateinit var sensorManager: SensorManager
     lateinit var motionSensor: MotionSensor
-
     /*SensorView*/
     lateinit var circleMove: ImageView
     lateinit var viewRoot: RelativeLayout
@@ -60,10 +51,7 @@ class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListen
         binding.circleFix.visibility = View.VISIBLE
         binding.circleMove.visibility = View.VISIBLE
         requestedOrientation = (ActivityInfo.SCREEN_ORIENTATION_NOSENSOR)
-        /*sensor implementation*/
-        sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
-        sensorGravity = sensorManager.getDefaultSensor(TYPE_GRAVITY)
-        sensorRotation = sensorManager.getDefaultSensor(TYPE_ROTATION_VECTOR)
+
         /*sensor view*/
         viewRoot = binding.relativeLayout
         circleMove = binding.circleMove
@@ -73,11 +61,9 @@ class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListen
             this,
             this
         )
-
         countDown = CountDown(binding, this)
         viewModel = ViewModelProvider(this).get(AlignmentViewModel::class.java)
         viewModel.state.observe(this) {
-//            Log.d(TAG, "onCreate: ${it.name}")
             when (it) {
                 State.AlignmentStart -> {
                     binding.circleFix.visibility = View.VISIBLE
@@ -92,7 +78,7 @@ class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListen
                     countDown.startCountDown()
                 }
                 State.AlignmentCompleted -> {
-
+                    // scale contour + camera capture
                 }
             }
         }
@@ -100,19 +86,19 @@ class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListen
 
     override fun onResume() {
         super.onResume()
-        motionSensor.registerListeners()
+        motionSensor.registerMotionSensorListeners()
     }
 
     override fun onPause() {
         super.onPause()
-        motionSensor.unregisterListener()
+        motionSensor.unregisterMotionSensorListener()
     }
 
-    override fun inRangeCallback(isInZ: Boolean, isInX: Boolean) {
-        Log.d(TAG, "z: $isInZ\tx:$isInX")
+    override fun isWrongOrientation(isInZ: Boolean, isInX: Boolean) {
         if (isInZ && isInX) {
             viewModel.setState(State.CountDown)
-        }else {
+        } else {
+            binding.text.textSize = 70f
             countDown.stopCountDown()
             viewModel.setState(State.AlignmentStart)
         }
@@ -126,6 +112,7 @@ class MainActivity : AppCompatActivity(), CircleInRangeListener, CountDownListen
     override fun isCountDownCompleted(completed: Boolean) {
         if (completed) {
             binding.text.visibility = View.VISIBLE
+            binding.text.textSize = 20f
             binding.text.text = "Finished"
             viewModel.setState(State.AlignmentCompleted)
         }

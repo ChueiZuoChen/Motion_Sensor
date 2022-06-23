@@ -4,7 +4,7 @@
     android:shape="oval">
 
     <stroke
-        android:color="#F406F4"
-        android:width="5dp"
+        android:color="#007AFF"
+        android:width="3dp"
         />
 </shape>

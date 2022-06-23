@@ -13,20 +13,20 @@
 
     <ImageView
         android:id="@+id/circle_fix"
-        android:visibility="invisible"
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:src="@drawable/circle_orange"
+        android:src="@drawable/circle_fix"
+        android:visibility="invisible"
         tools:ignore="ContentDescription" />
 
     <ImageView
-        android:visibility="invisible"
         android:id="@+id/circle_move"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:src="@drawable/circle_purple"
+        android:src="@drawable/circle_move"
+        android:visibility="invisible"
         tools:ignore="ContentDescription" />
 
     <ProgressBar
@@ -34,13 +34,13 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="150dp"
         android:layout_height="150dp"
-        android:rotation="-90"
-        android:max="100"
-        android:progress="0"
-        android:indeterminate="false"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:progressDrawable="@drawable/circle_blue" />
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/circle_green"
+        android:rotation="-90" />
 
     <TextView
         android:id="@+id/text"
@@ -48,8 +48,9 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
-        android:text="OK!"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="#25F90D"
+        android:textSize="70sp"
+        android:textStyle="bold"
         android:visibility="gone" />
 </RelativeLayout>

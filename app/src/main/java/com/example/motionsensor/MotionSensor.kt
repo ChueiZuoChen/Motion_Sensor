@@ -16,20 +16,20 @@ private const val TAG = "MotionSensor"
 class MotionSensor(
     private val viewRoot: View,
     private val circleMove: View,
-    private val context: Context,
-    private val callback: CircleInRangeListener,
+    context: Context,
+    private val callback: OrientationListener,
 ) : SensorEventListener {
     private var mx by Delegates.notNull<Double>()
     private var my by Delegates.notNull<Double>()
     private val sensorManager: SensorManager
     private var sensorGravity: Sensor? = null
     private var sensorRotation: Sensor? = null
-    private var sensorAccelerometer: Sensor? = null
     private val FROM_RADES_TO_DEGS = -57.5
     var vector1: Double = 0.0
     var vector2: Double = 0.0
-    var isInZ:Boolean = false
-    var isInX:Boolean = false
+    var isInZ: Boolean = false
+    var isInX: Boolean = false
+
     init {
         isInX = false
         isInZ = false
@@ -38,9 +38,7 @@ class MotionSensor(
         sensorManager = context.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         sensorRotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
-        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
-
 
     var over = false
     override fun onSensorChanged(event: SensorEvent?) {
@@ -59,7 +57,6 @@ class MotionSensor(
                         Log.d(TAG, "top: ${params.topMargin}")
                     } else {
                         params.leftMargin = (mx * 15).toInt()
-//                        params.leftMargin = (((15 - it.values[0]) * mx).toInt())
                         params.topMargin = (((10 + it.values[1] - 9.81) * my).toInt())
                         Log.d(TAG, "top: ${params.topMargin}")
                     }
@@ -83,13 +80,8 @@ class MotionSensor(
                     SensorManager.getOrientation(adjustedRotationMatrix, orientation)
                     vector1 = orientation[1] * FROM_RADES_TO_DEGS
                     vector2 = orientation[2] * FROM_RADES_TO_DEGS
-                    Log.d(TAG, "vector1: $vector1")
-//                    Log.d(TAG, String.format("pitch: %.3f\tyaw: %.3f", vector1, vector2))
                     over = vector1 > 0.0
                 }
-            }
-            Sensor.TYPE_ACCELEROMETER -> {
-                Log.d(TAG, "mag: ${event.values[0]}\t${event.values[1]}\t${event.values[2]}")
             }
         }
         circleMove.layoutParams = params
@@ -97,37 +89,36 @@ class MotionSensor(
             if (!isInX) {
                 isInX = true
             }
-        }else{
-            if (isInZ){
+        } else {
+            if (isInZ) {
                 isInX = false
             }
         }
         if (1.5 > vector1 && vector1 > -1.5) {
             if (!isInZ) {
                 isInZ = true
-                callback.inRangeCallback(isInZ,isInX)
+                callback.isWrongOrientation(isInZ, isInX)
             }
         } else {
             if (isInZ) {
                 isInZ = false
-                callback.inRangeCallback(isInZ,isInX)
+                callback.isWrongOrientation(isInZ, isInX)
             }
         }
     }
 
-    override fun onAccuracyChanged(p0: Sensor?, p1: Int) {}
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
-    fun registerListeners() {
+    fun registerMotionSensorListeners() {
         sensorManager.registerListener(this, sensorGravity, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, sensorRotation, SensorManager.SENSOR_DELAY_NORMAL)
-        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
-    fun unregisterListener() {
+    fun unregisterMotionSensorListener() {
         sensorManager.unregisterListener(this)
     }
 }
 
-interface CircleInRangeListener {
-    fun inRangeCallback(isInZ: Boolean, isInX: Boolean)
+interface OrientationListener {
+    fun isWrongOrientation(isInZ: Boolean, isInX: Boolean)
 }
