@@ -1,5 +1,6 @@
 package com.example.motionsensor
 
+import android.content.Context
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
@@ -7,34 +8,40 @@ import android.hardware.SensorManager
 import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
-import kotlin.math.log
+import androidx.appcompat.app.AppCompatActivity
 import kotlin.properties.Delegates
 
 private const val TAG = "MotionSensor"
 
 class MotionSensor(
-    private val sensorManager: SensorManager,
     private val viewRoot: View,
     private val circleMove: View,
-    private val isInRangeCallback: IsInRangeCallback
+    private val context: Context,
+    private val isInRangeCallback: IsInRangeCallback,
 ) : SensorEventListener {
     private var mx by Delegates.notNull<Double>()
     private var my by Delegates.notNull<Double>()
+    private val sensorManager: SensorManager
     private var sensorGravity: Sensor? = null
     private var sensorRotation: Sensor? = null
-    val FROM_RADES_TO_DEGS = -57.5
-    var vector1:Double= 0.0
-    var vector2:Double= 0.0
+    private var sensorAccelerometer: Sensor? = null
+    private val FROM_RADES_TO_DEGS = -57.5
+    var vector1: Double = 0.0
+    var vector2: Double = 0.0
 
     init {
         mx = 0.0
         my = 0.0
+        sensorManager = context.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
         sensorGravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY)
         sensorRotation = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        sensorAccelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
     }
-    var isIn = false
+
+    var isInZ = false
+    var isInX = false
+    var over = false
     override fun onSensorChanged(event: SensorEvent?) {
-        var over = false
         val params = circleMove.layoutParams as RelativeLayout.LayoutParams
         when (event?.sensor?.type) {
             Sensor.TYPE_GRAVITY -> {
@@ -44,12 +51,13 @@ class MotionSensor(
                 }
                 event.let {
                     val params = circleMove.layoutParams as RelativeLayout.LayoutParams
-                    params.leftMargin = (((15 - it.values[0]) * mx).toInt())
-
                     if (over) {
+                        params.leftMargin = (mx * 15).toInt()
                         params.topMargin = (((10 - it.values[1] + 9.81) * my).toInt())
                         Log.d(TAG, "top: ${params.topMargin}")
                     } else {
+//                        params.leftMargin = (mx * 15).toInt()
+                        params.leftMargin = (((15 - it.values[0]) * mx).toInt())
                         params.topMargin = (((10 + it.values[1] - 9.81) * my).toInt())
                         Log.d(TAG, "top: ${params.topMargin}")
                     }
@@ -59,13 +67,13 @@ class MotionSensor(
                 if (event.values.size > 4) {
                     val truncatedRotationVector = FloatArray(4)
                     System.arraycopy(event.values, 0, truncatedRotationVector, 0, 4)
-                    val rotationMartix = FloatArray(9)
-                    SensorManager.getRotationMatrixFromVector(rotationMartix,
+                    val rotationMatrix = FloatArray(9)
+                    SensorManager.getRotationMatrixFromVector(rotationMatrix,
                         truncatedRotationVector)
                     val worldAxisX = SensorManager.AXIS_X
                     val worldAxisZ = SensorManager.AXIS_Z
                     val adjustedRotationMatrix = FloatArray(9)
-                    SensorManager.remapCoordinateSystem(rotationMartix,
+                    SensorManager.remapCoordinateSystem(rotationMatrix,
                         worldAxisX,
                         worldAxisZ,
                         adjustedRotationMatrix)
@@ -73,23 +81,34 @@ class MotionSensor(
                     SensorManager.getOrientation(adjustedRotationMatrix, orientation)
                     vector1 = orientation[1] * FROM_RADES_TO_DEGS
                     vector2 = orientation[2] * FROM_RADES_TO_DEGS
-//                    Log.d(TAG, "vector1: $vector1")
+                    Log.d(TAG, "vector1: $vector1")
 //                    Log.d(TAG, String.format("pitch: %.3f\tyaw: %.3f", vector1, vector2))
-                    over = vector1>0.0
-                    Log.d(TAG, "over: $over")
+                    over = vector1 > 0.0
                 }
+            }
+            Sensor.TYPE_ACCELEROMETER -> {
+                Log.d(TAG, "mag: ${event.values[0]}\t${event.values[1]}\t${event.values[2]}")
             }
         }
         circleMove.layoutParams = params
-        if (1.5>vector1&&vector1>-1.5&&1.5>vector2&&vector2>-1.5){
-            if (!isIn) {
-                isInRangeCallback.isInRange(true)
-                isIn = true
+        if (1.5 > vector2 && vector2 > -1.5) {
+            if (!isInX) {
+                isInX = true
             }
-        }else {
-            if (isIn){
-                isInRangeCallback.isInRange(false)
-                isIn = false
+        }else{
+            if (isInZ){
+                isInX = false
+            }
+        }
+        if (1.5 > vector1 && vector1 > -1.5) {
+            if (!isInZ) {
+                isInZ = true
+                isInRangeCallback.isInRange(isInZ,isInX)
+            }
+        } else {
+            if (isInZ) {
+                isInZ = false
+                isInRangeCallback.isInRange(isInZ,isInX)
             }
         }
     }
@@ -99,6 +118,7 @@ class MotionSensor(
     fun registerListeners() {
         sensorManager.registerListener(this, sensorGravity, SensorManager.SENSOR_DELAY_NORMAL)
         sensorManager.registerListener(this, sensorRotation, SensorManager.SENSOR_DELAY_NORMAL)
+        sensorManager.registerListener(this, sensorAccelerometer, SensorManager.SENSOR_DELAY_NORMAL)
     }
 
     fun unregisterListener() {
@@ -107,5 +127,5 @@ class MotionSensor(
 }
 
 interface IsInRangeCallback {
-    fun isInRange(isIn: Boolean)
+    fun isInRange(isInZ: Boolean, isInX: Boolean)
 }

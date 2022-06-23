@@ -25,4 +25,14 @@
         android:layout_height="150dp"
         android:src="@drawable/circle_purple"
         tools:ignore="ContentDescription" />
+    <TextView
+        android:id="@+id/text"
+        android:visibility="gone"
+        android:text="OK!"
+        android:textColor="#25F90D"
+        android:textAppearance="@style/TextAppearance.AppCompat.Large"
+        android:layout_width="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_height="wrap_content"/>
 </RelativeLayout>

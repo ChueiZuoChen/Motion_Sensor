@@ -8,6 +8,7 @@ import android.hardware.SensorManager
 import android.os.Bundle
 import android.util.Log
 import android.util.Size
+import android.view.View
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -18,7 +19,7 @@ import com.example.motionsensor.databinding.ActivityMainBinding
 
 private const val TAG = "MainActivity"
 
-class MainActivity : AppCompatActivity(),IsInRangeCallback{
+class MainActivity : AppCompatActivity(), IsInRangeCallback {
     lateinit var binding: ActivityMainBinding
     lateinit var preview: Preview
     var selector: CameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
@@ -47,9 +48,9 @@ class MainActivity : AppCompatActivity(),IsInRangeCallback{
         viewRoot = binding.relativeLayout
         circleMove = binding.circleMove
         motionSensor = MotionSensor(
-            sensorManager,
             viewRoot,
             circleMove,
+            this,
             this
         )
         preview = Preview.Builder()
@@ -72,7 +73,12 @@ class MainActivity : AppCompatActivity(),IsInRangeCallback{
         motionSensor.unregisterListener()
     }
 
-    override fun isInRange(isIn: Boolean) {
-        Log.d(TAG, "isInRange: $isIn")
+    override fun isInRange(isInZ: Boolean, isInX: Boolean) {
+        Log.d(TAG, "z: $isInZ\tx:$isInX")
+        if (isInZ&&isInX) {
+            binding.text.visibility = View.VISIBLE
+        }else {
+            binding.text.visibility = View.GONE
+        }
     }
 }
