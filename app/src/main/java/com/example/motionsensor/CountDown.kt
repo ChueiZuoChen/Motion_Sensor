@@ -32,12 +32,10 @@ class CountDown(
         actionCounter = object : CountDownTimer(millisInFuture, countDownInterval) {
             override fun onTick(millisUntilFinished: Long) {
                 val countDownSecond = millisUntilFinished / countDownInterval
-                //TODO: action for each second
-                countDownListener.countDownSeconds(countDownSecond)
+                countDownListener.getCountDownSeconds(countDownSecond)
             }
 
             override fun onFinish() {
-                //TODO completed action
                 countDownListener.isCountDownCompleted(true)
             }
         }
@@ -53,6 +51,6 @@ class CountDown(
 }
 
 interface CountDownListener {
-    fun countDownSeconds(second: Long)
+    fun getCountDownSeconds(second: Long)
     fun isCountDownCompleted(completed: Boolean = false)
 }

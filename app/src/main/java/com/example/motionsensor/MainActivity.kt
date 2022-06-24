@@ -6,7 +6,9 @@ import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.RelativeLayout
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
@@ -33,7 +35,10 @@ class MainActivity : AppCompatActivity(), OrientationListener, CountDownListener
     lateinit var motionSensor: MotionSensor
     /*SensorView*/
     lateinit var circleMove: ImageView
+    lateinit var circleFix: ImageView
+    lateinit var circleCountdownProgressbar:ProgressBar
     lateinit var viewRoot: RelativeLayout
+    lateinit var countDownLabel:TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,13 +53,17 @@ class MainActivity : AppCompatActivity(), OrientationListener, CountDownListener
         cameraProvider = ProcessCameraProvider.getInstance(this).get()
         cameraProvider!!.bindToLifecycle(this, selector, preview)
 
-        binding.circleFix.visibility = View.VISIBLE
-        binding.circleMove.visibility = View.VISIBLE
+
         requestedOrientation = (ActivityInfo.SCREEN_ORIENTATION_NOSENSOR)
 
         /*sensor view*/
         viewRoot = binding.relativeLayout
         circleMove = binding.circleMove
+        circleFix = binding.circleFix
+        countDownLabel = binding.text
+        circleCountdownProgressbar = binding.circleCountdownProgressbar
+        circleFix.visibility = View.VISIBLE
+        circleMove.visibility = View.VISIBLE
         motionSensor = MotionSensor(
             viewRoot,
             circleMove,
@@ -66,15 +75,15 @@ class MainActivity : AppCompatActivity(), OrientationListener, CountDownListener
         viewModel.state.observe(this) {
             when (it) {
                 State.AlignmentStart -> {
-                    binding.circleFix.visibility = View.VISIBLE
-                    binding.circleMove.visibility = View.VISIBLE
-                    binding.circleCountdownProgressbar.visibility = View.INVISIBLE
+                    circleFix.visibility = View.VISIBLE
+                    circleMove.visibility = View.VISIBLE
+                    circleCountdownProgressbar.visibility = View.INVISIBLE
                 }
                 State.CountDown -> {
-                    binding.circleFix.visibility = View.INVISIBLE
-                    binding.circleMove.visibility = View.INVISIBLE
-                    binding.text.visibility = View.VISIBLE
-                    binding.circleCountdownProgressbar.visibility = View.VISIBLE
+                    circleFix.visibility = View.INVISIBLE
+                    circleMove.visibility = View.INVISIBLE
+                    countDownLabel.visibility = View.VISIBLE
+                    circleCountdownProgressbar.visibility = View.VISIBLE
                     countDown.startCountDown()
                 }
                 State.AlignmentCompleted -> {
@@ -94,26 +103,28 @@ class MainActivity : AppCompatActivity(), OrientationListener, CountDownListener
         motionSensor.unregisterMotionSensorListener()
     }
 
-    override fun isWrongOrientation(isInZ: Boolean, isInX: Boolean) {
-        if (isInZ && isInX) {
+    override fun isWrongOrientation(isInZRotateRange: Boolean, isInXRotateRange: Boolean):Boolean {
+        if (isInZRotateRange && isInXRotateRange) {
             viewModel.setState(State.CountDown)
+            return true
         } else {
-            binding.text.textSize = 70f
+            countDownLabel.textSize = 70f
             countDown.stopCountDown()
             viewModel.setState(State.AlignmentStart)
+            return false
         }
     }
 
-    override fun countDownSeconds(second: Long) {
+    override fun getCountDownSeconds(second: Long) {
         Log.d(TAG, "countDownSeconds: $second")
-        binding.text.text = second.toString()
+        countDownLabel.text = second.toString()
     }
 
     override fun isCountDownCompleted(completed: Boolean) {
         if (completed) {
-            binding.text.visibility = View.VISIBLE
-            binding.text.textSize = 20f
-            binding.text.text = "Finished"
+            countDownLabel.visibility = View.VISIBLE
+            countDownLabel.textSize = 20f
+            countDownLabel.text = "Finished"
             viewModel.setState(State.AlignmentCompleted)
         }
     }

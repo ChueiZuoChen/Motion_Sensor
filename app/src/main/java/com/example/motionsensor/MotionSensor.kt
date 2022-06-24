@@ -9,6 +9,7 @@ import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.math.abs
 import kotlin.properties.Delegates
 
 private const val TAG = "MotionSensor"
@@ -25,14 +26,14 @@ class MotionSensor(
     private var sensorGravity: Sensor? = null
     private var sensorRotation: Sensor? = null
     private val FROM_RADES_TO_DEGS = -57.5
-    var vector1: Double = 0.0
-    var vector2: Double = 0.0
-    var isInZ: Boolean = false
-    var isInX: Boolean = false
+    var xRotateDegree: Double = 0.0
+    var zRotateDegree: Double = 0.0
+    var isInZRotateRange: Boolean = false
+    var isInXRotateRange: Boolean = false
 
     init {
-        isInX = false
-        isInZ = false
+        isInXRotateRange = false
+        isInZRotateRange = false
         mx = 0.0
         my = 0.0
         sensorManager = context.getSystemService(AppCompatActivity.SENSOR_SERVICE) as SensorManager
@@ -50,7 +51,6 @@ class MotionSensor(
                     my = (viewRoot.height - circleMove.height) / 20.0
                 }
                 event.let {
-                    val params = circleMove.layoutParams as RelativeLayout.LayoutParams
                     if (over) {
                         params.leftMargin = (mx * 15).toInt()
                         params.topMargin = (((10 - it.values[1] + 9.81) * my).toInt())
@@ -78,31 +78,31 @@ class MotionSensor(
                         adjustedRotationMatrix)
                     val orientation = FloatArray(3)
                     SensorManager.getOrientation(adjustedRotationMatrix, orientation)
-                    vector1 = orientation[1] * FROM_RADES_TO_DEGS
-                    vector2 = orientation[2] * FROM_RADES_TO_DEGS
-                    over = vector1 > 0.0
+                    xRotateDegree = orientation[1] * FROM_RADES_TO_DEGS
+                    zRotateDegree = orientation[2] * FROM_RADES_TO_DEGS
+                    over = xRotateDegree > 0.0
                 }
             }
         }
         circleMove.layoutParams = params
-        if (1.5 > vector2 && vector2 > -1.5) {
-            if (!isInX) {
-                isInX = true
+        if (1.5 > abs(zRotateDegree)) {
+            if (!isInXRotateRange) {
+                isInXRotateRange = true
             }
         } else {
-            if (isInZ) {
-                isInX = false
+            if (isInZRotateRange) {
+                isInXRotateRange = false
             }
         }
-        if (1.5 > vector1 && vector1 > -1.5) {
-            if (!isInZ) {
-                isInZ = true
-                callback.isWrongOrientation(isInZ, isInX)
+        if (1.5 > abs(xRotateDegree)) {
+            if (!isInZRotateRange) {
+                isInZRotateRange = true
+                callback.isWrongOrientation(isInZRotateRange, isInXRotateRange)
             }
         } else {
-            if (isInZ) {
-                isInZ = false
-                callback.isWrongOrientation(isInZ, isInX)
+            if (isInZRotateRange) {
+                isInZRotateRange = false
+                callback.isWrongOrientation(isInZRotateRange, isInXRotateRange)
             }
         }
     }
@@ -120,5 +120,5 @@ class MotionSensor(
 }
 
 interface OrientationListener {
-    fun isWrongOrientation(isInZ: Boolean, isInX: Boolean)
+    fun isWrongOrientation(isInZRotateRange: Boolean, isInXRotateRange: Boolean): Boolean
 }
